@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ตรวจกระดาษคำตอบ</title>
+<meta name="theme-color" content="#21804A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ตรวจข้อสอบ">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7F3; --sheet:#FFFFFF; --ink:#24292E; --muted:#5E6A64; --rule:#D5DED6;
+  --green:#21804A; --green-soft:#E3F1E7; --pen:#D3263A; --pen-soft:#FBE6E8;
+  --amber:#B97800; --amber-soft:#FFF1CF; --blue:#2C67D1; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#131A16; --sheet:#1C2520; --ink:#E7ECE8; --muted:#9DABA3; --rule:#33413A;
+    --green:#5CC685; --green-soft:#1F3428; --pen:#FF6B78; --pen-soft:#3A1E22;
+    --amber:#F2B53A; --amber-soft:#3A2F14; --blue:#7FA6FF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131A16; --sheet:#1C2520; --ink:#E7ECE8; --muted:#9DABA3; --rule:#33413A;
+  --green:#5CC685; --green-soft:#1F3428; --pen:#FF6B78; --pen-soft:#3A1E22;
+  --amber:#F2B53A; --amber-soft:#3A2F14; --blue:#7FA6FF; color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.55 "Sarabun","Leelawadee UI","Thonburi",Tahoma,sans-serif;
+  display:flex;flex-direction:column;overflow:hidden;-webkit-tap-highlight-color:transparent}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+[hidden]{display:none !important}
+
+/* shell */
+header.top{flex:none;background:var(--paper);border-bottom:1px solid var(--rule)}
+.sess{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;text-align:left;padding:10px 16px}
+.sess .t{flex:1;min-width:0}
+.sess b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sess small{display:block;color:var(--muted);font-size:14px}
+.sess .chg{color:var(--green);font-weight:600;font-size:15px;white-space:nowrap}
+.sync{font-size:13px;color:var(--muted);white-space:nowrap}
+.sync.warn{color:var(--amber)}
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px 40px}
+nav.tabs{flex:none;display:flex;border-top:1px solid var(--rule);background:var(--sheet)}
+nav.tabs button{flex:1;border:0;background:none;padding:8px 2px 10px;font-size:14px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs svg{width:24px;height:24px}
+nav.tabs button[aria-selected="true"]{color:var(--green)}
+
+/* scan */
+#v-scan{height:100%;display:flex;flex-direction:column;background:#0F1411}
+.cam{position:relative;flex:1;overflow:hidden}
+.cam video,.cam canvas.ov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.guide{position:absolute;left:7%;right:7%;top:12%;bottom:16%;border:2px dashed rgba(255,255,255,.55);border-radius:10px;pointer-events:none}
+.say{position:absolute;left:12px;right:12px;top:12px;text-align:center;color:#fff;font-weight:600;font-size:17px;
+  text-shadow:0 1px 3px rgba(0,0,0,.7);pointer-events:none}
+.say.go{color:#7CF0A6}
+.camerr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;color:#fff}
+.camerr p{margin:0;max-width:420px}
+.scanbar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:#0F1411;color:#fff}
+.shutter{width:66px;height:66px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.15);flex:none}
+.shutter:active{background:rgba(255,255,255,.45)}
+.ghost{border:1.5px solid rgba(255,255,255,.6);background:none;color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:15px;min-width:92px}
+.ghost[aria-pressed="true"]{background:#fff;color:#0F1411}
+.last{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:12px;background:var(--sheet);color:var(--ink);
+  border-radius:12px;padding:8px 10px;border:0;text-align:left;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.last .who{flex:1;min-width:0}
+.last .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);color:#fff;font-weight:600;font-size:18px}
+
+/* common pieces */
+.pick{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;margin:16px 0 8px;padding:20px 16px;border:2px dashed var(--green);border-radius:14px;background:var(--green-soft);color:var(--green);font-weight:700;font-size:18px}
+.pick span{font-weight:400;font-size:14px;color:var(--muted)}
+.status{min-height:22px;color:var(--muted);font-size:15px;margin:6px 2px 10px}
+.status.err{color:var(--pen)}
+.sheets{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.sheets li{border-bottom:1px solid var(--rule)}
+.row{display:flex;align-items:center;gap:12px;width:100%;padding:10px 2px;border:0;background:none;text-align:left}
+.strip{width:132px;height:42px;object-fit:cover;object-position:left center;border-radius:5px;border:1px solid var(--rule);background:var(--rule);flex:none}
+.row .who{flex:1;min-width:0}
+.row .who b,.last .who b{font-weight:600}
+.row .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.tag{font-size:13px;padding:1px 8px;border-radius:99px;background:var(--pen-soft);color:var(--pen);font-weight:600}
+.tag.amber{background:var(--amber-soft);color:var(--amber)}
+.tag.ok{background:var(--green-soft);color:var(--green)}
+.empty{color:var(--muted);text-align:center;padding:28px 8px}
+.score{position:relative;display:inline-grid;place-items:center;width:92px;height:56px;flex:none;color:var(--pen)}
+.score svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.score span{font-weight:700;font-size:21px;transform:rotate(-4deg)}
+.score.big{width:150px;height:92px}
+.score.big span{font-size:36px}
+.score.pending{color:var(--amber)}
+.back{border:0;background:none;color:var(--green);font-weight:600;padding:14px 0 6px}
+.dhead{display:flex;align-items:center;gap:14px;margin:4px 0 8px}
+.dhead label,.fld{display:block;font-size:14px;color:var(--muted)}
+.inp{display:block;width:100%;margin-top:2px;padding:9px 11px;border:1px solid var(--rule);border-radius:9px;background:var(--sheet);font-size:17px}
+.stripbig{display:block;width:100%;border-radius:8px;border:1px solid var(--rule);margin:4px 0}
+.imgbox{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.imgbox canvas{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;color:var(--muted);margin:8px 2px 16px}
+.legend i{display:inline-block;width:12px;height:12px;border:3px solid;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.notice{background:var(--amber-soft);border-left:4px solid var(--amber);padding:9px 12px;border-radius:6px;margin:0 0 12px;font-size:15px}
+h2{font-size:18px;margin:20px 0 8px}
+.hint{color:var(--muted);font-size:14px;margin:-2px 0 10px}
+.qgrid{display:grid;grid-template-columns:1fr;gap:0 24px}
+@media (min-width:600px){.qgrid{grid-template-columns:1fr 1fr}}
+.q{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--rule)}
+.q .n{width:32px;text-align:right;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.q.check{background:var(--amber-soft)}
+.q .res{width:20px;text-align:center;font-weight:700}
+.b{width:38px;height:34px;border:1.5px solid var(--rule);border-radius:7px;background:var(--sheet);font-weight:600;color:var(--muted)}
+.b.key{border-color:var(--green);border-width:2.5px;color:var(--green)}
+.b.mine{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.b.mine.wrong{background:var(--pen);border-color:var(--pen)}
+.b.mine.right{background:var(--green);border-color:var(--green)}
+.b.mine.check{background:var(--amber);border-color:var(--amber)}
+.edited{font-size:11px;color:var(--blue);font-weight:600}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.btn{border:1.5px solid var(--green);background:var(--sheet);color:var(--green);padding:8px 14px;border-radius:9px;font-weight:600;display:inline-block}
+.btn.solid{background:var(--green);color:#fff}
+.btn.danger{border-color:var(--pen);color:var(--pen)}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:2px 14px 12px;margin:14px 0}
+textarea.inp{min-height:76px;resize:vertical}
+.mono{letter-spacing:2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.switch{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:15px}
+.switch input{width:20px;height:20px;accent-color:var(--green);flex:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+.stats div{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:8px 6px;text-align:center}
+.stats b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.stats span{font-size:13px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:7px 6px;border-bottom:1px solid var(--rule);text-align:left}
+th{font-size:14px;color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right}
+tr.miss td{color:var(--muted)}
+.bar{display:flex;align-items:center;gap:10px;margin:5px 0;font-size:15px}
+.bar .n{width:50px;color:var(--muted)}
+.bar .track{flex:1;height:14px;background:var(--rule);border-radius:4px;overflow:hidden}
+.bar .fill{display:block;height:100%;background:var(--pen)}
+.bar .p{width:120px;text-align:right;font-size:14px;font-variant-numeric:tabular-nums}
+.list{list-style:none;margin:6px 0;padding:0}
+.list li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.list li .t{flex:1;min-width:0}
+.list small{display:block;color:var(--muted);font-size:13px}
+.list li.on b{color:var(--green)}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sheet);
+  padding:8px 16px;border-radius:10px;font-size:15px;max-width:90vw;z-index:20}
+@media (prefers-reduced-motion: no-preference){
+  .score svg path{stroke-dasharray:340;stroke-dashoffset:340;animation:draw .6s ease-out forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="sess" id="sessBtn"><span class="t"><b id="sessTitle"></b><small id="sessSub"></small></span><span class="sync" id="syncTag"></span><span class="chg">เปลี่ยน</span></button>
+</header>
+
+<main id="main">
+  <!-- ส่องตรวจ -->
+  <section id="v-scan">
+    <div class="cam" id="cam">
+      <video id="video" playsinline muted autoplay></video>
+      <canvas class="ov" id="camOv"></canvas>
+      <div class="guide" id="guide"></div>
+      <div class="say" id="say">กำลังเปิดกล้อง…</div>
+      <div class="camerr" id="camErr" hidden></div>
+      <button class="last" id="lastCard" hidden></button>
+      <div class="busy" id="busy" hidden>กำลังตรวจ…</div>
+    </div>
+    <div class="scanbar">
+      <label class="ghost" for="filesScan" style="text-align:center">เลือกรูป</label>
+      <input id="filesScan" type="file" accept="image/*" multiple hidden>
+      <button class="shutter" id="shutter" aria-label="ถ่ายและตรวจทันที"></button>
+      <button class="ghost" id="torch" aria-pressed="false" hidden>ไฟฉาย</button>
+      <span id="torchSpacer" style="min-width:92px"></span>
+    </div>
+  </section>
+
+  <!-- รายการ -->
+  <section id="v-list" hidden><div class="wrap">
+    <div id="listView">
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+      <ul id="sheets" class="sheets"></ul>
+      <label class="pick" for="filesList">เพิ่มจากรูปในเครื่อง<span>เลือกได้หลายรูปพร้อมกัน</span></label>
+      <input id="filesList" type="file" accept="image/*" multiple hidden>
+    </div>
+    <div id="detailView" hidden></div>
+  </div></section>
+
+  <!-- สรุป -->
+  <section id="v-sum" hidden><div class="wrap" id="sumBody"></div></section>
+
+  <!-- ตั้งค่า -->
+  <section id="v-set" hidden><div class="wrap" id="setBody"></div></section>
+
+  <!-- เลือกชุดตรวจ -->
+  <section id="v-sess" hidden><div class="wrap" id="sessBody"></div></section>
+</main>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-v="scan" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8V5h3M20 8V5h-3M4 16v3h3M20 16v3h-3"/><circle cx="12" cy="12" r="3.2"/></svg>ส่องตรวจ</button>
+  <button role="tab" data-v="list" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>ผลตรวจ</button>
+  <button role="tab" data-v="sum" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-7"/></svg>สรุป</button>
+  <button role="tab" data-v="set" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>ตั้งค่า</button>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
